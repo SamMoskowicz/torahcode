@@ -142,7 +142,10 @@ searchButton.addEventListener('click', () => {
             foundResult.append(listItem)
         }
     }
-    if (!found.length) foundResult = '<h1>לא נמצאו תוצאות לחיפוש</h1>'
+    if (!found.length) {
+        foundResult = document.createElement('h1')
+        foundResult.innerText = 'לא נמצאו תוצאות לחיפוש'
+    }
     else results.append(`תוצאות: ${resultLength}`)
     results.append(foundResult)
 })
