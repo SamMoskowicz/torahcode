@@ -131,6 +131,7 @@ const sefarim = [
 searchButton.addEventListener('click', () => {
     if (word.value.length < 2) {
         alert('יש להזין לפחות שתי אותיות')
+        return
     }
     results.innerHTML = ''
     const found = searchThru(word.value, lowerRange.value, upperRange.value)
