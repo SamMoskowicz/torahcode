@@ -107,12 +107,6 @@ function makeHebrewNumber(n) {
     return hebHndrd + hebrewNum.split('').reverse().join('')
 }
 
-const searchButton = document.getElementById('search_button')
-const lowerRange = document.getElementById('lower_range')
-const upperRange = document.getElementById('upper_range')
-const word = document.getElementById('word')
-const results = document.getElementById('results')
-
 const parts = ['תורה', 'נביאים', 'כתובים']
 const sefarim = [
     ['בראשית', 'שמות', 'ויקרא', 'במדבר', 'דברים'], 
@@ -120,31 +114,43 @@ const sefarim = [
     ['תהילים', 'איוב', 'משלי', 'שיר השירים', 'רות', 'איכה', 'קוהלת', 'אסתר', 'דניאל', 'עזרא', 'נחמיה', 'דברי הימים א', 'דברי הימים ב']
 ]
 
-searchButton.addEventListener('click', () => {
-    if (word.value.length < 2) {
-        alert('יש להזין לפחות שתי אותיות')
-        return
+const hebLet = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט', 'י', 'כ', 'ל', 'מ', 'נ', 'ס', 'ע', 'פ', 'צ', 'ק', 'ר', 'ש', 'ת']
+
+const obj = {}
+
+for (let i = 0; i < hebLet.length; i++) {
+    const found = findWord(hebLet[i], 1)
+    for (let j = 0; j< found.length; j++) {
+        found[j] = found[j].start
+        found[j].jumps = []
     }
-    results.innerHTML = `<h1>מחפש</h1>`
-    setTimeout(() => {
-        const found = searchThru(word.value, lowerRange.value, upperRange.value)
-        let resultLength = 0
-        let foundResult = document.createElement('ul')
-        for (let i = 0; i < found.length; i++) {
-            for (let j = 0; j < found[i].length; j++) {
-                resultLength++
-                const curr = found[i][j].start
-                const listItem = document.createElement('li')
-                listItem.innerText = `${sefarim[curr.part][curr.sefer]} פרק: ${makeHebrewNumber(curr.perek + 1)} פסוק: ${makeHebrewNumber(curr.pasuk + 1)} אות: ${curr.char + 1} דילוג: ${found[i][j].jump}`
-                foundResult.append(listItem)
-            }
+    obj[hebLet[i]] = found
+}
+
+for (let i = 0; i < hebLet.length; i++) {
+    for (let j = 0; j < obj[hebLet[i]].length; j++) {
+        const currLet = obj[hebLet[i]][j]
+        for (let k = 1; k <= 100; k++) {
+            let nextHndrd = ''
+            let jumps = 0
+            loopThru((curr, part, sefer, perek, pasuk, char) => {
+                if (jumps % k === 0) nextHndrd += curr
+                jumps++
+                if (nextHndrd.length === 100) {
+                    const currJump = {
+                        part,
+                        sefer,
+                        perek,
+                        pasuk,
+                        char,
+                        nextHndrd
+                    }
+                    currLet.jumps.push(currJump)
+                    return false
+                }
+            }, currLet.part, currLet.sefer, currLet.perek, currLet.pasuk, currLet.char)
         }
-        results.innerHTML = ''
-        if (!found.length) {
-            foundResult = document.createElement('h1')
-            foundResult.innerText = 'לא נמצאו תוצאות לחיפוש'
-        }
-        else results.append(`תוצאות: ${resultLength}`)
-        results.append(foundResult)
-    }, 0)
-})
+    }
+}
+
+console.log(obj)
