@@ -22,41 +22,27 @@ function loopThru(cb, partStrt, seferStrt, perekStrt, pasukStrt, charStrt) {
     }
 }
 
-function checkWord(word, jump, partStrt, seferStrt, perekStrt, pasukStrt, charStrt) {
-    let jumps = 0
+function checkWord(word, jump, start) {
     let currWord = ''
-    return loopThru((curr, part, sefer, perek, pasuk, char) => {
-        if (jumps % jump === 0) currWord+= curr
-        jumps++
+    for (let i = start; i < tenach.length; i += jump) {
+        currWord += tenach[i].curr
         if (currWord === word) {
             return {
-                start: {
-                    part: partStrt,
-                    sefer: seferStrt,
-                    perek: perekStrt,
-                    pasuk: pasukStrt,
-                    char: charStrt
-                },
-                end: {
-                    part,
-                    sefer,
-                    perek,
-                    pasuk,
-                    char
-                },
+                ...tenach[start],
                 jump
             }
-        } 
-        if (word.slice(0, currWord.length) !== currWord || currWord.length > word.length) return false
-    }, partStrt, seferStrt, perekStrt, pasukStrt, charStrt)
+        }
+        if (word.slice(0, currWord.length) !== currWord) return false
+    }
 }
 
 function findWord(word, jump) {
     const found = []
-    loopThru((curr, part, sefer, perek, pasuk, char) => {
-        const checkedWord = checkWord(word, jump, part, sefer, perek, pasuk, char)
-        if (checkedWord) found.push(checkedWord)
-    }, 0, 0, 0, 0, 0)
+    for (let i = 0; i < tenach.length; i++) {
+        const currWord = checkWord(word, jump, i)
+        if (currWord) found.push(currWord)
+    }
+
     return found
 }
 
@@ -125,20 +111,26 @@ searchButton.addEventListener('click', () => {
         alert('יש להזין לפחות שתי אותיות')
         return
     }
+    const timeBefore = performance.now()
     results.innerHTML = `<h1>מחפש</h1>`
     setTimeout(() => {
-        const found = searchThru(word.value, lowerRange.value, upperRange.value)
+        const found = searchThru(word.value, Number(lowerRange.value), Number(upperRange.value))
         let resultLength = 0
         let foundResult = document.createElement('ul')
         for (let i = 0; i < found.length; i++) {
             for (let j = 0; j < found[i].length; j++) {
                 resultLength++
-                const curr = found[i][j].start
+                const curr = found[i][j]
                 const listItem = document.createElement('li')
                 listItem.innerText = `${sefarim[curr.part][curr.sefer]} פרק: ${makeHebrewNumber(curr.perek + 1)} פסוק: ${makeHebrewNumber(curr.pasuk + 1)} אות: ${curr.char + 1} דילוג: ${found[i][j].jump}`
                 foundResult.append(listItem)
+                const menukad = document.createElement('div')
+                menukad.className = 'menukad'
+                menukad.innerText = tenachMenukad[curr.part][curr.sefer][curr.perek][curr.pasuk]
+                listItem.append(menukad)
             }
         }
+        console.log((performance.now() - timeBefore)/1000)
         results.innerHTML = ''
         if (!found.length) {
             foundResult = document.createElement('h1')
